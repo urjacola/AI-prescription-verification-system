@@ -3,6 +3,8 @@ import numpy as np
 import pytesseract
 from PIL import Image
 
+pytesseract.pytesseract.tesseract_cmd = r"C:\Users\sabni\Downloads\tesseract-ocr-w64-setup-5.5.0.20241111.exe"
+
 def preprocess_image(image):
     """Preprocess the image for OCR"""
     img_array = np.array(image)
