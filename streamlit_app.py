@@ -1,9 +1,8 @@
 import streamlit as st
-import cv2
-import pytesseract
-import numpy as np
 from PIL import Image
 import io
+import numpy as np
+from utils import preprocess_image, extract_text, verify_prescription
 
 # Mock medication database
 medications_db = {
@@ -18,48 +17,21 @@ medications_db = {
         "max_daily": "2000mg",
         "interactions": ["alcohol", "contrast dyes"],
         "patient_instructions": "Take with meals to reduce stomach upset."
+    },
+    "atorvastatin": {
+        "common_dosages": ["10mg", "20mg", "40mg", "80mg"],
+        "max_daily": "80mg",
+        "interactions": ["grapefruit juice", "certain antibiotics"],
+        "patient_instructions": "Take in the evening. Report unexplained muscle pain."
+    },
+    "aspirin": {
+        "common_dosages": ["81mg", "325mg"],
+        "max_daily": "4000mg",
+        "interactions": ["blood thinners", "ibuprofen"],
+        "patient_instructions": "Take with food to minimize stomach irritation."
     }
     # Add more medications as needed
 }
-
-def preprocess_image(image):
-    # Convert to OpenCV format
-    img_array = np.array(image)
-    # Convert to grayscale
-    gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-    # Apply thresholding
-    thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-    return thresh
-
-def extract_text(image):
-    processed_img = preprocess_image(image)
-    text = pytesseract.image_to_string(processed_img)
-    return text
-
-def verify_prescription(medication, dosage, frequency, patient_data):
-    issues = []
-    
-    # Check if medication exists
-    if medication.lower() not in medications_db:
-        issues.append(f"Unknown medication: {medication}")
-        return issues, ""
-    
-    med_info = medications_db[medication.lower()]
-    
-    # Check dosage
-    if dosage not in med_info["common_dosages"]:
-        issues.append(f"Unusual dosage: {dosage}")
-    
-    # Check for interactions with patient's medications
-    for current_med in patient_data["current_medications"]:
-        if current_med in med_info["interactions"]:
-            issues.append(f"Potential interaction with {current_med}")
-    
-    # Check for allergies
-    if medication.lower() in patient_data["allergies"]:
-        issues.append(f"Patient has known allergy to {medication}")
-        
-    return issues, med_info.get("patient_instructions", "")
 
 # Streamlit UI
 st.title("AI Prescription Verification System")
@@ -123,7 +95,8 @@ if st.button("Verify Prescription"):
             medication, 
             dosage, 
             frequency, 
-            patient_data
+            patient_data,
+            medications_db  # Pass the database to the function
         )
         
         # Display results
@@ -159,4 +132,4 @@ if st.button("Verify Prescription"):
 
 # Add explanatory text at the bottom
 st.markdown("---")
-st.caption("This is a prototype system for the AI Hackathon. It demonstrates how AI can assist in verifying prescriptions and generating patient instructions.")
+st.caption("This is a prototype system for AI Prescription Verification. It demonstrates how AI can assist in verifying prescriptions and generating patient instructions.")
